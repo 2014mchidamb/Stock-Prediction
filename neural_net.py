@@ -1,3 +1,5 @@
+# Adapted from Michael Nielsen's book
+
 import numpy as np
 import random
 
@@ -16,7 +18,8 @@ class NeuralNetwork(object):
 
   def feedforward(self, x):
     for b, w in zip(self.biases, self.weights):
-      x = relu(np.dot(w, x)+b)
+      # relu activation
+      x = np.maximum((np.dot(w, x)+b), 0)
     return x
 
   def SGD(self, training_data, epochs, mini_batch_size, l_rate, lmda):
@@ -35,4 +38,36 @@ class NeuralNetwork(object):
       delta_nabla_b, delta_nabla_w = self.backprop(x, y)
       nabla_b = [nb+dnb for nb, dnb in zip(nabla_b, delta_nabla_b)]
       nabla_w = [nw+dnw for nw, dnw in zip(nabla_w, delta_nabla_w)]
-    self.weights =
+    self.weights = [(1-l_rate*(lmbda/n))*w-(l_rate/len(mini_batch))*nw
+                    for w, nw in zip(self.weights, nabla_w)]
+    self.biases = [b-(l_rate/len(mini_batch))*nb
+                   for b, nb in zip(self.biases, nabla_b)]
+
+  def backprop(self, x, y):
+    nabla_b = [np.zeros(b.shape) for b in self.biases]
+    nabla_w = [np.zeros(w.shape) for w in self.weights]
+    # feedforward
+    activation = np.array(x).reshape(-1, 1)
+    activations = [activation]
+    zs = []
+    for w, b in zip(self.weights, self.biases):
+      z = np.dot(w, activation)+b
+      zs.append(z)
+      # relu activation
+      activation = np.maximum(z, 0)
+      activations.append(activation)
+    # backward pass
+    delta = (activation-y)
+    delta[z <= 0] = 0
+    nabla_b[-1] = delta
+    nabla_w[-1] = np.dot(delta, activations[-2].transpose())
+    for l in xrange(2, self.num_layers):
+      z = zs[-l]
+      delta = np.dot(self.weights[-l+1].transpose(), delta)
+      delta[z <= 0] = 0
+      nabla_b[-l] = delta
+      nabla_w[-l] = np.dot(delta, activations[-l-1].transpose())
+    return (nabla_b, nabla_w)
+
+
+
