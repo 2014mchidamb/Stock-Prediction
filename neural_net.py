@@ -17,19 +17,21 @@ class NeuralNetwork(object):
                     for x, y in zip(self.sizes[:-1], self.sizes[1:])]
 
   def feedforward(self, x):
+    x = np.array(x).reshape(-1, 1)
     for b, w in zip(self.biases, self.weights):
       # relu activation
       x = np.maximum((np.dot(w, x)+b), 0)
     return x
 
-  def SGD(self, training_data, epochs, mini_batch_size, l_rate, lmda):
+  def SGD(self, training_data, epochs, mini_batch_size, l_rate, lmbda):
     n = len(training_data)
     for i in xrange(epochs):
       random.shuffle(training_data)
       mini_batches = [training_data[k:k+mini_batch_size]
                       for k in xrange(0, n, mini_batch_size)]
       for mini_batch in mini_batches:
-        self.update_mini_batch(mini_batch, l_rate, lmda, n)
+        self.update_mini_batch(mini_batch, l_rate, lmbda, n)
+      print "Training cost for epoch ", i, " is: ", self.total_cost(training_data, lmbda)
 
   def update_mini_batch(self, mini_batch, l_rate, lmbda, n):
     nabla_b = [np.zeros(b.shape) for b in self.biases]
@@ -69,5 +71,12 @@ class NeuralNetwork(object):
       nabla_w[-l] = np.dot(delta, activations[-l-1].transpose())
     return (nabla_b, nabla_w)
 
-
+  def total_cost(self, training_data, lmbda):
+    total_cost = 0
+    for x, y in training_data:
+      total_cost += 0.5*np.linalg.norm(self.feedforward(x)-y)**2
+    total_cost /= len(training_data)
+    total_cost += 0.5*(lmbda/len(training_data))*sum(
+        np.linalg.norm(w)**2 for w in self.weights)
+    return total_cost
 

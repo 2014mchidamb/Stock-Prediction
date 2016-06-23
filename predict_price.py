@@ -19,7 +19,6 @@ for stock in portfolio:
   training_data = get_data(stock, start_date, end_date,
                            num_days_per_point, traits)
   net = NeuralNetwork([num_days_per_point*len(traits), 10, 1])
-  net.SGD(training_data, 30, 10, 0.5, lmda = 5.0)
+  net.SGD(training_data, 100, 10, 3.0, lmbda = 5.0)
   tomorrow_input = get_point(stock, '2016-06-13', '2016-06-21', traits)
-  print net.weights
   print net.feedforward(tomorrow_input)
