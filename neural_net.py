@@ -36,12 +36,15 @@ class NeuralNetwork(object):
   def update_mini_batch(self, mini_batch, l_rate, lmbda, n):
     nabla_b = [np.zeros(b.shape) for b in self.biases]
     nabla_w = [np.zeros(w.shape) for w in self.weights]
+    # adagrad update
+    historical_grad = [np.zeros(w.shape) for w in self.weights]
     for x, y in mini_batch:
       delta_nabla_b, delta_nabla_w = self.backprop(x, y)
       nabla_b = [nb+dnb for nb, dnb in zip(nabla_b, delta_nabla_b)]
       nabla_w = [nw+dnw for nw, dnw in zip(nabla_w, delta_nabla_w)]
-    self.weights = [(1-l_rate*(lmbda/n))*w-(l_rate/len(mini_batch))*nw
-                    for w, nw in zip(self.weights, nabla_w)]
+      historical_grad += np.square(nabla_w)
+    self.weights = [(1-l_rate*(lmbda/n))*w-(l_rate/len(mini_batch))*nw/(0.000001+np.sqrt(hg))
+                    for w, nw, hg in zip(self.weights, nabla_w, historical_grad)]
     self.biases = [b-(l_rate/len(mini_batch))*nb
                    for b, nb in zip(self.biases, nabla_b)]
 
@@ -80,3 +83,8 @@ class NeuralNetwork(object):
         np.linalg.norm(w)**2 for w in self.weights)
     return total_cost
 
+def standardize(training):
+  x_vals = np.array([x for x, y in training])
+  x_vals -= np.mean(x_vals, axis = 0)
+  x_vals /= np.std(x_vals, axis = 0)
+  return [(x, y[1]) for x, y in zip(x_vals, training)]
