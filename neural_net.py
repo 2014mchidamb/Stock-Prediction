@@ -31,7 +31,7 @@ class NeuralNetwork(object):
                       for k in xrange(0, n, mini_batch_size)]
       for mini_batch in mini_batches:
         self.update_mini_batch(mini_batch, l_rate, lmbda, n)
-      print "Training cost for epoch ", i, " is: ", self.total_cost(training_data, lmbda)
+      #print "Training cost for epoch ", i, " is: ", self.total_cost(training_data, lmbda)
 
   def update_mini_batch(self, mini_batch, l_rate, lmbda, n):
     nabla_b = [np.zeros(b.shape) for b in self.biases]
@@ -58,18 +58,18 @@ class NeuralNetwork(object):
     for w, b in zip(self.weights, self.biases):
       z = np.dot(w, activation)+b
       zs.append(z)
-      # relu activation
-      activation = np.maximum(z, 0)
+      # leaky relu activation
+      activation = np.maximum(z, 0.01*z)
       activations.append(activation)
     # backward pass
     delta = (activation-y)
-    delta[z <= 0] = 0
+    delta[z <= 0] = 0.01
     nabla_b[-1] = delta
     nabla_w[-1] = np.dot(delta, activations[-2].transpose())
     for l in xrange(2, self.num_layers):
       z = zs[-l]
       delta = np.dot(self.weights[-l+1].transpose(), delta)
-      delta[z <= 0] = 0
+      delta[z <= 0] = 0.01
       nabla_b[-l] = delta
       nabla_w[-l] = np.dot(delta, activations[-l-1].transpose())
     return (nabla_b, nabla_w)
